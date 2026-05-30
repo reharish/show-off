@@ -19,8 +19,12 @@ No directories to manage, no CDNs to fetch, and everything—including your imag
 
 ## Installation
 
-Clone the repository and install it locally using pip:
+Install it directly via pip:
+```bash
+pip install show-off
+```
 
+Or clone the repository and install it locally:
 ```bash
 git clone https://github.com/reharish/show-off.git
 cd show-off
