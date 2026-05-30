@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "show-off"
+version = "1.0.0"
+description = "CLI tool to generate beautiful standalone HTML presentations from Markdown."
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "PyYAML>=6.0"
+]
+
+[project.scripts]
+show-off = "show_off.cli:main"
+
+[tool.setuptools]
+packages = ["show_off"]
+
+[tool.setuptools.package-data]
+show_off = [
+    "dist/**/*.css",
+    "dist/**/*.js",
+    "dist/**/*.html",
+    "plugin/**/*.css",
+    "plugin/**/*.js"
+]

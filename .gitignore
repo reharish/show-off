@@ -1,0 +1,22 @@
+.idea/
+*.iml
+*.iws
+*.eml
+out/
+.DS_Store
+.svn
+log/*.log
+tmp/**
+node_modules/
+.sass-cache
+
+# Python packaging and caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+build/
+show_off.egg-info/
+
+# Local test presentation
+test-presentation/
