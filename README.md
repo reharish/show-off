@@ -1,7 +1,5 @@
 # show-off
 
-> "Share your thoughts via presentation/slideshow with a goodness of HTML and CSS"
-
 Reveal.js is great, but managing presentations with it can be a hassle. You have to drag around a `dist/` directory, set up local HTTP servers just to preview your slides, deal with broken relative paths for images, and fight with CSS for custom layouts.
 
 `show-off` is a simple Python CLI that takes a single Markdown file and compiles it into a completely standalone, beautiful HTML slideshow. 
