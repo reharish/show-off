@@ -42,6 +42,36 @@ HTML_TEMPLATE = """<!doctype html>
     <script>
         const config = {config_json};
         config.plugins = [ RevealMarkdown, RevealHighlight, RevealNotes ];
+        
+        // Intercept arrow keys to scroll overflowing slides before navigating
+        window.addEventListener('keydown', function(event) {{
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {{
+                const activeSlide = Reveal.getCurrentSlide();
+                if (activeSlide) {{
+                    const isScrollable = activeSlide.scrollHeight > activeSlide.clientHeight;
+                    if (isScrollable) {{
+                        const scrollTop = activeSlide.scrollTop;
+                        const scrollHeight = activeSlide.scrollHeight;
+                        const clientHeight = activeSlide.clientHeight;
+                        
+                        if (event.key === 'ArrowDown') {{
+                            if (scrollTop + clientHeight < scrollHeight - 5) {{
+                                activeSlide.scrollBy({{ top: 50, behavior: 'auto' }});
+                                event.stopPropagation();
+                                event.preventDefault();
+                            }}
+                        }} else if (event.key === 'ArrowUp') {{
+                            if (scrollTop > 5) {{
+                                activeSlide.scrollBy({{ top: -50, behavior: 'auto' }});
+                                event.stopPropagation();
+                                event.preventDefault();
+                            }}
+                        }}
+                    }}
+                }}
+            }}
+        }}, true);
+
         Reveal.initialize(config);
     </script>
 </body>
@@ -178,6 +208,18 @@ EYE_CATCHY_CSS = """
 .reveal a:hover {
     color: #a5b4fc !important;
     border-bottom: 1px solid #a5b4fc !important;
+}
+
+/* Default vertical scroll for overflowing slides - hide scrollbars */
+.reveal .slides section {
+    overflow-y: auto !important;
+    max-height: 100% !important;
+    box-sizing: border-box !important;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+}
+.reveal .slides section::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
 }
 """
 
