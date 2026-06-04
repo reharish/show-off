@@ -26,11 +26,7 @@ HTML_TEMPLATE = """<!doctype html>
 <body>
     <div class="reveal">
         <div class="slides">
-            <section data-markdown>
-                <textarea data-template>
-{markdown_content}
-                </textarea>
-            </section>
+{slides_content}
         </div>
     </div>
     <script>
@@ -89,7 +85,8 @@ EYE_CATCHY_CSS = """
 
 /* Radial Glow Background */
 .reveal-viewport {
-    background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%) !important;
+    background-color: var(--r-background-color) !important;
+    background-image: var(--bg-gradient) !important;
 }
 
 /* Sleek Headings */
@@ -98,12 +95,12 @@ EYE_CATCHY_CSS = """
     font-weight: 800 !important;
     text-transform: none !important;
     letter-spacing: -0.03em !important;
-    text-shadow: 0 10px 30px rgba(99, 102, 241, 0.15) !important;
+    text-shadow: var(--heading-shadow) !important;
 }
 
 .reveal h1 {
     font-size: 2.85em !important;
-    background: linear-gradient(135deg, #c084fc 0%, #818cf8 50%, #60a5fa 100%) !important;
+    background: var(--h1-gradient) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     padding-bottom: 0.15em !important;
@@ -111,20 +108,19 @@ EYE_CATCHY_CSS = """
 
 .reveal h2 {
     font-size: 1.9em !important;
-    color: #f1f5f9 !important;
-    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%) !important;
+    background: var(--h2-gradient) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
 }
 
 .reveal h3 {
-    color: #cbd5e1 !important;
+    color: var(--h3-color) !important;
 }
 
 /* macOS Terminal Window Code Blocks styling */
 .reveal pre {
-    background: #0d1117 !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: var(--code-bg) !important;
+    border: 1px solid var(--code-border) !important;
     border-radius: 12px !important;
     box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5) !important;
     padding: 16px 20px 20px 20px !important;
@@ -154,6 +150,7 @@ EYE_CATCHY_CSS = """
     font-size: 0.85em !important;
     line-height: 1.6 !important;
     background: transparent !important;
+    color: var(--code-text) !important;
 }
 
 /* Bullet points customized with indigo symbol */
@@ -172,7 +169,7 @@ EYE_CATCHY_CSS = """
 .reveal p, .reveal li {
     font-size: 0.95em !important;
     line-height: 1.5 !important;
-    color: #cbd5e1 !important;
+    color: var(--text-color) !important;
 }
 
 /* Flexbox and Layout columns setup */
@@ -182,8 +179,8 @@ EYE_CATCHY_CSS = """
 
 /* Glassmorphism Cards styling */
 .reveal div[style*="background"] {
-    background: rgba(255, 255, 255, 0.02) !important;
-    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--card-border) !important;
     backdrop-filter: blur(12px) !important;
     border-radius: 14px !important;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
@@ -191,7 +188,7 @@ EYE_CATCHY_CSS = """
 }
 
 .reveal div[style*="background"]:hover {
-    background: rgba(255, 255, 255, 0.04) !important;
+    background: var(--card-hover-bg) !important;
     border-color: rgba(129, 140, 248, 0.25) !important;
     transform: translateY(-4px) !important;
     box-shadow: 0 20px 40px rgba(129, 140, 248, 0.08) !important;
@@ -199,15 +196,15 @@ EYE_CATCHY_CSS = """
 
 /* Premium links */
 .reveal a {
-    color: #818cf8 !important;
+    color: var(--r-link-color, #818cf8) !important;
     text-decoration: none !important;
-    border-bottom: 1px dashed rgba(129, 140, 248, 0.3) !important;
+    border-bottom: 1px dashed var(--r-link-color, rgba(129, 140, 248, 0.3)) !important;
     transition: all 0.2s ease !important;
 }
 
 .reveal a:hover {
-    color: #a5b4fc !important;
-    border-bottom: 1px solid #a5b4fc !important;
+    color: var(--r-link-color-hover, #a5b4fc) !important;
+    border-bottom: 1px solid var(--r-link-color-hover, #a5b4fc) !important;
 }
 
 /* Default vertical scroll for overflowing slides - hide scrollbars */
@@ -221,12 +218,47 @@ EYE_CATCHY_CSS = """
 .reveal .slides section::-webkit-scrollbar {
     display: none; /* Chrome, Safari and Opera */
 }
+
+/* Premium Glassmorphism Tables styling */
+.reveal table {
+    margin: 24px auto !important;
+    border-collapse: collapse !important;
+    width: 90% !important;
+    max-width: 100% !important;
+    font-size: 0.75em !important;
+    background: var(--table-bg) !important;
+    border: 1px solid var(--table-border) !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
+}
+
+.reveal th, .reveal td {
+    padding: 12px 18px !important;
+    border-bottom: 1px solid var(--table-td-border) !important;
+}
+
+.reveal th {
+    background: var(--table-th-bg) !important;
+    color: var(--table-th-text) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 0.85em !important;
+    letter-spacing: 0.05em !important;
+    border-bottom: 2px solid rgba(129, 140, 248, 0.3) !important;
+}
+
+.reveal tr:nth-child(even) {
+    background: var(--table-tr-even) !important;
+}
+
+.reveal tr:hover {
+    background: var(--table-tr-hover) !important;
+}
 """
 
 # Default slides.md Template
 DEFAULT_SLIDES_MD = """---
 title: "show-off Presentation"
-theme: dracula
+theme: white
 transition: slide
 revealConfig:
   hash: true
@@ -238,33 +270,24 @@ revealConfig:
 # show-off 🚀
 ### HTML & CSS Presentations Made Easy
 
----
-
 <!-- .slide: data-background-image="assets/sample.svg" -->
-
----
+## Beautiful Backgrounds
+Easily customize slides with custom SVGs, images, colors, or videos.
 
 ## Reveal.js Features
-
 - **Auto-Animate**: Smooth transitions between elements
 - **Fragments**: Reveal bullets step-by-step
 - **Backgrounds**: Colors, Images, Videos, or Iframes
 - **Custom CSS**: Style it exactly how you want
 
----
-
 ## Fragments in Action
-
 - Step 1: Brainstorming <!-- .element: class="fragment" -->
 - Step 2: Write Markdown <!-- .element: class="fragment" -->
 - Step 3: Run `show-off make` <!-- .element: class="fragment" -->
 - Step 4: Show off! 🎉 <!-- .element: class="fragment" -->
 
----
-
 <!-- .slide: data-auto-animate -->
 ## Auto-Animate Demo
-
 ```javascript
 const showOff = {
   easy: true,
@@ -272,11 +295,8 @@ const showOff = {
 };
 ```
 
----
-
 <!-- .slide: data-auto-animate -->
 ## Auto-Animate Demo
-
 ```javascript
 const showOff = {
   easy: true,
@@ -286,25 +306,19 @@ const showOff = {
 };
 ```
 
----
-
 ## Two Column Layout
-
 <div style="display: flex; gap: 20px;">
-  <div style="flex: 1; text-align: left; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px;">
+  <div style="flex: 1; text-align: left; background: rgba(0,0,0,0.02); padding: 20px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.06);">
     <h3>Left Column</h3>
     <p>Using standard HTML and inline styles, you can create any grid or column layout easily.</p>
   </div>
-  <div style="flex: 1; text-align: left; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px;">
+  <div style="flex: 1; text-align: left; background: rgba(0,0,0,0.02); padding: 20px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.06);">
     <h3>Right Column</h3>
     <p>No complex markdown tricks required. Just write HTML when you need advanced structures.</p>
   </div>
 </div>
 
----
-
 ## Speaker Notes
-
 Press **`S`** on your keyboard to open the Speaker View.
 
 <aside class="notes">
@@ -312,10 +326,8 @@ Here are some speaker notes. You can see them only in the speaker view window.
 Perfect for keeping your thoughts organized!
 </aside>
 
----
-
 # Thank You! 💖
-Go build something eye-catchy.
+### Go build something eye-catchy.
 """
 
 # Default assets/sample.svg Illustration
@@ -462,7 +474,7 @@ def run_init(directory):
     print("\nInitialization complete! To compile your presentation, run:\n  show-off make")
 
 
-def run_make(input_path, output_path):
+def run_make(input_path, output_path, theme_override=None):
     input_file = Path(input_path).resolve()
     output_file = Path(output_path).resolve()
     
@@ -491,12 +503,43 @@ def run_make(input_path, output_path):
         metadata = {}
         markdown_content = content
         
-    # Inline local images and videos referenced in Markdown
+    # Inline local images and videos referenced in Markdown, fix list items with .element, and escape closing textareas
     base_dir = input_file.parent
     markdown_content = inline_assets(markdown_content, base_dir)
     
-    # Escape closing textarea tags
+    fragment_pattern = re.compile(r'^(\s*[-*+]\s+|\s*\d+\.\s+)(.*?)[ \t]*(<!--\s*\.element:\s*.*?\s*-->)[ \t]*$', re.MULTILINE)
+    markdown_content = fragment_pattern.sub(r'\1\3 \2', markdown_content)
+    
     markdown_content = markdown_content.replace('</textarea>', '&lt;/textarea&gt;')
+    
+    # Split markdown content into slides in Python to avoid Reveal.js lookahead regex issues
+    slides_html = []
+    separator_mode = metadata.get('slideSeparator', metadata.get('separator', 'headers'))
+    section_attrs = 'data-markdown data-separator="^\\r?\\n--vertical-never-match--\\r?\\n" data-separator-vertical="^\\r?\\n--vertical-never-match--\\r?\\n"'
+    
+    if separator_mode in ['hr', '---']:
+        # Split by --- for horizontal slides
+        h_slices = re.split(r'^\r?\n---\r?\n', markdown_content, flags=re.M)
+        for h_slide in h_slices:
+            if h_slide.strip():
+                # Check for vertical slides inside
+                v_slices = re.split(r'^\r?\n--\r?\n', h_slide, flags=re.M)
+                if len(v_slices) > 1:
+                    v_html = []
+                    for v_slide in v_slices:
+                        if v_slide.strip():
+                            v_html.append(f'            <section {section_attrs}>\n                <textarea data-template>\n{v_slide.strip()}\n                </textarea>\n            </section>')
+                    slides_html.append(f'        <section>\n' + '\n'.join(v_html) + '\n        </section>')
+                else:
+                    slides_html.append(f'        <section {section_attrs}>\n            <textarea data-template>\n{h_slide.strip()}\n            </textarea>\n        </section>')
+    else:
+        # Default is flat headers: # and ## as horizontal, with lookahead supporting optional slide attributes
+        slices = re.split(r'^\r?\n(?=#\s|##\s|<!--\s*\.slide:.*?\s*-->\s*\r?\n(?=#\s|##\s))', markdown_content, flags=re.M)
+        for slide in slices:
+            if slide.strip():
+                slides_html.append(f'        <section {section_attrs}>\n            <textarea data-template>\n{slide.strip()}\n            </textarea>\n        </section>')
+                
+    slides_content = '\n'.join(slides_html)
     
     # Load Reveal.js Core Styles
     try:
@@ -507,11 +550,11 @@ def run_make(input_path, output_path):
         sys.exit(1)
         
     # Load Theme Style
-    theme = metadata.get('theme', 'black')
+    theme = theme_override or metadata.get('theme', 'white')
     theme_file = dist_dir / 'theme' / f"{theme}.css"
     if not theme_file.exists():
-        print(f"Warning: Theme '{theme}' not found. Falling back to 'black' theme.", file=sys.stderr)
-        theme_file = dist_dir / 'theme' / "black.css"
+        print(f"Warning: Theme '{theme}' not found. Falling back to 'white' theme.", file=sys.stderr)
+        theme_file = dist_dir / 'theme' / "white.css"
         
     try:
         theme_css = theme_file.read_text(encoding='utf-8')
@@ -563,7 +606,83 @@ def run_make(input_path, output_path):
     
     # Load Eye Catchy Theme Override (enabled by default)
     eye_catchy_enabled = metadata.get('eyeCatchy', True)
-    eye_catchy_css = EYE_CATCHY_CSS if eye_catchy_enabled else ""
+    if eye_catchy_enabled:
+        # Determine if theme is light or dark to use appropriate CSS variables
+        light_themes = {'white', 'beige', 'simple', 'sky', 'solarized', 'serif'}
+        dark_themes = {'black', 'blood', 'dracula', 'league', 'moon', 'night'}
+        is_light = theme in light_themes
+        
+        if theme not in light_themes and theme not in dark_themes:
+            # Fallback heuristic for custom themes
+            bg_match = re.search(r'--r-background-color:\s*([^;]+);', theme_css)
+            if bg_match:
+                bg_color = bg_match.group(1).strip().lower()
+                if bg_color in {'#fff', '#ffffff', 'white', '#fdf6e3', '#f7f3de', '#f0f1eb', '#add8e6'}:
+                    is_light = True
+                elif bg_color.startswith('#'):
+                    hex_color = bg_color.lstrip('#')
+                    if len(hex_color) == 3:
+                        hex_color = ''.join(c*2 for c in hex_color)
+                    try:
+                        r = int(hex_color[0:2], 16)
+                        g = int(hex_color[2:4], 16)
+                        b = int(hex_color[4:6], 16)
+                        if (r * 0.299 + g * 0.587 + b * 0.114) > 128:
+                            is_light = True
+                    except ValueError:
+                        pass
+                        
+        if is_light:
+            theme_vars = """
+:root {
+    --bg-gradient: radial-gradient(circle at center, rgba(255, 255, 255, 0.6) 0%, rgba(0, 0, 0, 0.03) 100%) !important;
+    --text-color: var(--r-main-color, #334155) !important;
+    --h1-gradient: linear-gradient(135deg, var(--r-heading-color, #0f172a) 0%, var(--r-main-color, #334155) 100%) !important;
+    --h2-gradient: linear-gradient(135deg, var(--r-heading-color, #0f172a) 0%, var(--r-main-color, #334155) 100%) !important;
+    --h3-color: var(--r-heading-color, #475569) !important;
+    --heading-shadow: none !important;
+    --card-bg: rgba(0, 0, 0, 0.02) !important;
+    --card-border: rgba(0, 0, 0, 0.06) !important;
+    --card-hover-bg: rgba(0, 0, 0, 0.04) !important;
+    --code-bg: #f8fafc !important;
+    --code-border: rgba(0, 0, 0, 0.08) !important;
+    --code-text: var(--r-main-color, #0f172a) !important;
+    --table-bg: rgba(0, 0, 0, 0.02) !important;
+    --table-border: rgba(0, 0, 0, 0.08) !important;
+    --table-th-bg: rgba(99, 102, 241, 0.08) !important;
+    --table-th-text: var(--r-main-color, #0f172a) !important;
+    --table-td-border: rgba(0, 0, 0, 0.06) !important;
+    --table-tr-even: rgba(0, 0, 0, 0.01) !important;
+    --table-tr-hover: rgba(0, 0, 0, 0.02) !important;
+}
+"""
+        else:
+            theme_vars = """
+:root {
+    --bg-gradient: radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.2) 100%) !important;
+    --text-color: var(--r-main-color, #cbd5e1) !important;
+    --h1-gradient: linear-gradient(135deg, var(--r-heading-color, #ffffff) 0%, var(--r-main-color, #cbd5e1) 100%) !important;
+    --h2-gradient: linear-gradient(135deg, var(--r-heading-color, #ffffff) 0%, var(--r-main-color, #cbd5e1) 100%) !important;
+    --h3-color: var(--r-heading-color, #cbd5e1) !important;
+    --heading-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+    --card-bg: rgba(255, 255, 255, 0.02) !important;
+    --card-border: rgba(255, 255, 255, 0.06) !important;
+    --card-hover-bg: rgba(255, 255, 255, 0.04) !important;
+    --code-bg: #0d1117 !important;
+    --code-border: rgba(255, 255, 255, 0.08) !important;
+    --code-text: var(--r-main-color, #cbd5e1) !important;
+    --table-bg: rgba(255, 255, 255, 0.02) !important;
+    --table-border: rgba(255, 255, 255, 0.08) !important;
+    --table-th-bg: rgba(129, 140, 248, 0.15) !important;
+    --table-th-text: var(--r-main-color, #f1f5f9) !important;
+    --table-td-border: rgba(255, 255, 255, 0.06) !important;
+    --table-tr-even: rgba(255, 255, 255, 0.01) !important;
+    --table-tr-hover: rgba(255, 255, 255, 0.02) !important;
+}
+"""
+        eye_catchy_css = theme_vars + EYE_CATCHY_CSS
+    else:
+        eye_catchy_css = ""
 
     # Generate standalone HTML content
     html_content = HTML_TEMPLATE.format(
@@ -574,7 +693,7 @@ def run_make(input_path, output_path):
         highlight_css=highlight_css,
         eye_catchy_css=eye_catchy_css,
         custom_css=custom_css,
-        markdown_content=markdown_content,
+        slides_content=slides_content,
         reveal_js=reveal_js,
         notes_js=notes_js,
         markdown_js=markdown_js,
@@ -595,18 +714,44 @@ def main():
     # Direct Markdown compilation support:
     # If the first argument is not init or make, and looks like a markdown file or an existing file path, compile it directly.
     if len(sys.argv) > 1 and sys.argv[1] not in ["init", "make", "-h", "--help"]:
-        arg1 = sys.argv[1]
-        arg1_path = Path(arg1)
-        if arg1_path.suffix.lower() == '.md' or arg1_path.exists():
-            input_file = arg1
-            if len(sys.argv) > 2:
-                output_file = sys.argv[2]
-            else:
-                output_file = str(arg1_path.with_suffix('.html'))
-            run_make(input_file, output_file)
-            return
+        theme_override = None
+        cleaned_args = sys.argv[1:]
+        if "-t" in cleaned_args:
+            idx = cleaned_args.index("-t")
+            if idx + 1 < len(cleaned_args):
+                theme_override = cleaned_args[idx + 1]
+                del cleaned_args[idx:idx+2]
+        elif "--theme" in cleaned_args:
+            idx = cleaned_args.index("--theme")
+            if idx + 1 < len(cleaned_args):
+                theme_override = cleaned_args[idx + 1]
+                del cleaned_args[idx:idx+2]
+                
+        if len(cleaned_args) > 0:
+            arg1 = cleaned_args[0]
+            arg1_path = Path(arg1)
+            if arg1_path.suffix.lower() == '.md' or arg1_path.exists():
+                input_file = arg1
+                if len(cleaned_args) > 1:
+                    output_file = cleaned_args[1]
+                else:
+                    output_file = str(arg1_path.with_suffix('.html'))
+                run_make(input_file, output_file, theme_override=theme_override)
+                return
 
-    parser = argparse.ArgumentParser(description="show-off: Presentation tool using Markdown, HTML, and CSS")
+    # Find available themes dynamically
+    pkg_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+    theme_dir = pkg_dir / 'dist' / 'theme'
+    themes = []
+    if theme_dir.exists():
+        themes = sorted([p.stem for p in theme_dir.glob("*.css")])
+    themes_str = ", ".join(themes) if themes else "none found"
+    epilog_text = f"available themes (defined in frontmatter or overridden by -t): {themes_str}"
+
+    parser = argparse.ArgumentParser(
+        description="show-off: Presentation tool using Markdown, HTML, and CSS",
+        epilog=epilog_text
+    )
     subparsers = parser.add_subparsers(dest="command", help="Sub-commands")
     
     # init command
@@ -614,16 +759,21 @@ def main():
     init_parser.add_argument("directory", nargs="?", default=".", help="Directory to initialize (default: current directory)")
     
     # make command
-    make_parser = subparsers.add_parser("make", help="Compile slides.md into a standalone slides.html")
+    make_parser = subparsers.add_parser(
+        "make", 
+        help="Compile slides.md into a standalone slides.html",
+        epilog=epilog_text
+    )
     make_parser.add_argument("input", nargs="?", default="slides.md", help="Input Markdown file (default: slides.md)")
     make_parser.add_argument("output", nargs="?", default="slides.html", help="Output HTML file (default: slides.html)")
+    make_parser.add_argument("-t", "--theme", help="Override the presentation theme")
     
     args = parser.parse_args()
     
     if args.command == "init":
         run_init(args.directory)
     elif args.command == "make":
-        run_make(args.input, args.output)
+        run_make(args.input, args.output, theme_override=args.theme)
     else:
         parser.print_help()
 
