@@ -319,64 +319,17 @@ revealConfig:
 # show-off 🚀
 ### HTML & CSS Presentations Made Easy
 
-<!-- .slide: data-background-image="assets/sample.svg" -->
-## Beautiful Backgrounds
-Easily customize slides with custom SVGs, images, colors, or videos.
+## Simple Slide
+This is a simple slide with a title and a paragraph.
 
-## Reveal.js Features
+## Features
 - **Auto-Animate**: Smooth transitions between elements
 - **Fragments**: Reveal bullets step-by-step
-- **Backgrounds**: Colors, Images, Videos, or Iframes
-- **Custom CSS**: Style it exactly how you want
-
-## Fragments in Action
-- Step 1: Brainstorming <!-- .element: class="fragment" -->
-- Step 2: Write Markdown <!-- .element: class="fragment" -->
-- Step 3: Run `show-off make` <!-- .element: class="fragment" -->
-- Step 4: Show off! 🎉 <!-- .element: class="fragment" -->
-
-<!-- .slide: data-auto-animate -->
-## Auto-Animate Demo
-```javascript
-const showOff = {
-  easy: true,
-  beautiful: true
-};
-```
-
-<!-- .slide: data-auto-animate -->
-## Auto-Animate Demo
-```javascript
-const showOff = {
-  easy: true,
-  beautiful: true,
-  speed: "lightning fast",
-  standalone: "yes, 100%!"
-};
-```
-
-## Two Column Layout
-<div style="display: flex; gap: 20px;">
-  <div style="flex: 1; text-align: left; background: rgba(0,0,0,0.02); padding: 20px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.06);">
-    <h3>Left Column</h3>
-    <p>Using standard HTML and inline styles, you can create any grid or column layout easily.</p>
-  </div>
-  <div style="flex: 1; text-align: left; background: rgba(0,0,0,0.02); padding: 20px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.06);">
-    <h3>Right Column</h3>
-    <p>No complex markdown tricks required. Just write HTML when you need advanced structures.</p>
-  </div>
-</div>
-
-## Speaker Notes
-Press **`S`** on your keyboard to open the Speaker View.
+- **Speaker Notes**: Press 'S' key to view notes
 
 <aside class="notes">
-Here are some speaker notes. You can see them only in the speaker view window.
-Perfect for keeping your thoughts organized!
+Here are some speaker notes for this slide.
 </aside>
-
-# Thank You! 💖
-### Go build something eye-catchy.
 """
 
 # Default assets/sample.svg Illustration
@@ -533,24 +486,59 @@ def plantuml_encode(plantuml_text):
 
 
 def process_plantuml(markdown_content):
+    import shutil
+    import subprocess
+
     pattern = re.compile(r'```plantuml\s*\n(.*?)\n```', re.DOTALL)
+    plantuml_path = shutil.which('plantuml')
     
     def replace_block(match):
         diagram_code = match.group(1).strip()
-        try:
-            encoded = plantuml_encode(diagram_code)
-            url = f"http://www.plantuml.com/plantuml/svg/{encoded}"
-            req = urllib.request.Request(
-                url,
-                headers={'User-Agent': 'show-off compiler'}
-            )
-            with urllib.request.urlopen(req, timeout=10) as response:
-                svg_data = response.read()
-            b64_data = base64.b64encode(svg_data).decode('utf-8')
-            return f'<div class="plantuml-container" style="text-align: center; margin: 24px auto;"><img class="plantuml-diagram" src="data:image/svg+xml;base64,{b64_data}" alt="PlantUML Diagram" style="border: none !important; box-shadow: none !important; max-width: 100% !important; max-height: 60vh !important; height: auto !important; width: auto !important; background: transparent !important;"></div>'
-        except Exception as e:
-            print(f"Warning: Failed to render PlantUML diagram: {e}. Keeping raw block.", file=sys.stderr)
-            return match.group(0)
+        
+        # Ensure block has start/end elements
+        if '@start' not in diagram_code:
+            diagram_code = f"@startuml\n{diagram_code}"
+        if '@end' not in diagram_code:
+            diagram_code = f"{diagram_code}\n@enduml"
+
+        svg_data = None
+        
+        # Try local compilation first
+        if plantuml_path:
+            try:
+                process = subprocess.Popen(
+                    [plantuml_path, '-tsvg', '-pipe'],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=False
+                )
+                stdout, stderr = process.communicate(input=diagram_code.encode('utf-8'))
+                if process.returncode == 0 and stdout:
+                    svg_data = stdout
+                else:
+                    err_msg = stderr.decode('utf-8', errors='ignore').strip()
+                    print(f"Warning: Local PlantUML compilation failed: {err_msg}. Trying online fallback.", file=sys.stderr)
+            except Exception as e:
+                print(f"Warning: Failed to run local PlantUML: {e}. Trying online fallback.", file=sys.stderr)
+
+        # Fallback to online API
+        if not svg_data:
+            try:
+                encoded = plantuml_encode(diagram_code)
+                url = f"http://www.plantuml.com/plantuml/svg/{encoded}"
+                req = urllib.request.Request(
+                    url,
+                    headers={'User-Agent': 'show-off compiler'}
+                )
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    svg_data = response.read()
+            except Exception as e:
+                print(f"Warning: Failed to render PlantUML diagram: {e}. Keeping raw block.", file=sys.stderr)
+                return match.group(0)
+
+        b64_data = base64.b64encode(svg_data).decode('utf-8')
+        return f'<div class="plantuml-container" style="text-align: center; margin: 24px auto;"><img class="plantuml-diagram" src="data:image/svg+xml;base64,{b64_data}" alt="PlantUML Diagram" style="border: none !important; box-shadow: none !important; max-width: 100% !important; max-height: 60vh !important; height: auto !important; width: auto !important; background: transparent !important;"></div>'
             
     return pattern.sub(replace_block, markdown_content)
 

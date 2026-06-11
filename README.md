@@ -4,16 +4,17 @@ Reveal.js is great, but managing presentations with it can be a hassle. You have
 
 `show-off` is a simple Python CLI that takes a single Markdown file and compiles it into a completely standalone, beautiful HTML slideshow. 
 
-No directories to manage, no CDNs to fetch, and everything—including your images and styles—is packed into a single offline-ready file that you can share anywhere.
+No directories to manage, no CDNs to fetch, and everything—including your images, styles, and diagrams—is packed into a single offline-ready file that you can share and present anywhere.
 
 ---
 
-## What it does
+## Dependencies
 
-- **Zero-dependency output**: Your styles, scripts, plugins, and images (automatically converted to base64) are compiled inline. The output HTML file works 100% offline.
-- **Polished styles by default**: Instead of reveal.js's basic styling, it automatically applies modern typography (Plus Jakarta Sans), radial dark backgrounds, glassmorphic cards, and macOS-style code blocks.
-- **Layout flexibility**: Because it compiles to HTML, you can drop inline HTML elements (like flexbox/grid divs) directly into your Markdown for complex multi-column layouts.
-- **YAML configuration**: Configure transitions, themes, core Reveal options, or write custom CSS directly in the Markdown's frontmatter.
+- **Python**: `>= 3.8`
+- **Python Libraries**: `PyYAML>=6.0` (automatically installed via pip)
+- **Diagram Engines**:
+  - **PlantUML**: Automatically detects if the local `plantuml` executable is installed in your system path and compiles diagrams 100% offline. If local `plantuml` is not found, it gracefully falls back to the online `plantuml.com` API (which requires an internet connection during compilation).
+  - **Mermaid**: Completely offline-ready. On the first diagram compilation, the compiler downloads `mermaid.min.js` to `~/.show-off/mermaid.min.js` and caches it. It is then inline-embedded directly into your HTML presentation.
 
 ---
 
@@ -33,33 +34,45 @@ pip3 install -e . --break-system-packages
 
 ---
 
-## Usage
+## Getting Started
 
-### 1. Initialize a template
-Generate a starting presentation template in your current directory:
-```bash
-show-off init
+To get started quickly, create a plain Markdown file without any complex layouts or images.
+
+### 1. Create a `plain.md` file
+Write your slide content in a file named `plain.md`:
+
+```markdown
+---
+title: "Simple Presentation"
+theme: white
+transition: slide
+---
+
+# My Presentation 🚀
+
+## Welcome
+This is a simple presentation created with show-off.
+
+## Features
+- Easy to use
+- Plain Markdown
+- HTML & CSS styling
 ```
-This creates `slides.md` (a template demonstrating fragments, layouts, and animations) and a sample image inside an `assets/` folder.
 
-### 2. Compile your slides
-To compile your Markdown file, pass it directly to the command:
+### 2. Compile your presentation
+Run the following command to compile your slideshow:
 ```bash
-show-off slides.md
+show-off plain.md
 ```
-This generates `slides.html` in the same directory. 
-
-If you want to save it with a custom name, pass the output path as the second argument:
-```bash
-show-off slides.md output.html
-```
-
-*(You can also use `show-off make slides.md output.html` if you prefer the sub-command syntax).*
+This will compile the markdown and output a single, standalone `plain.html` file in the same directory. Open `plain.html` directly in your browser to view your presentation!
 
 ---
 
-## Frontmatter Settings
+## Advanced Usage
 
+For more advanced slideshows, you can use frontmatter headers, custom layouts, diagrams, and speaker notes.
+
+### 1. Frontmatter Configuration
 You can customize the slideshow using the YAML block at the top of your Markdown file:
 
 ```yaml
@@ -78,3 +91,67 @@ css: |                       # write inline CSS styles to override anything
   }
 ---
 ```
+
+### 2. Slide Separators
+By default, slides are split automatically by H1 (`#`) and H2 (`##`) headers. 
+Alternatively, you can configure manual horizontal and vertical slide separators in your frontmatter:
+```yaml
+slideSeparator: "^---$"
+slideSeparatorVertical: "^--$"
+```
+
+### 3. Custom Layouts
+Since the output is compiled to HTML, you can drop inline HTML elements (like flexbox/grid divs) directly into your Markdown for complex multi-column layouts:
+
+```html
+## Two Column Layout
+
+<div style="display: flex; gap: 20px;">
+  <div style="flex: 1; text-align: left; background: rgba(0,0,0,0.02); padding: 20px; border-radius: 10px;">
+    <h3>Left Column</h3>
+    <p>Using standard HTML and inline styles, you can create grid layouts easily.</p>
+  </div>
+  <div style="flex: 1; text-align: left; background: rgba(0,0,0,0.02); padding: 20px; border-radius: 10px;">
+    <h3>Right Column</h3>
+    <p>No complex markdown tricks required.</p>
+  </div>
+</div>
+```
+
+### 4. Diagrams Support
+You can render PlantUML or Mermaid diagrams directly inside your slides using markdown code blocks.
+
+#### PlantUML Diagram
+```plantuml
+@startuml
+Alice -> Bob: Hello Bob
+Bob -> Alice: Hello Alice
+@enduml
+```
+
+#### Mermaid Diagram
+```mermaid
+graph TD
+A[Start] --> B[Process]
+B --> C[End]
+```
+Mermaid diagrams automatically adapt to your presentation colors (using dynamic brightness detection) to ensure high contrast and readability on both light and dark slides.
+
+### 5. Speaker Notes
+Add speaker notes inside an `<aside class="notes">` tag. Press the **`S`** key on your keyboard while presenting to open the Speaker View window:
+
+```markdown
+## Slide Title
+Slide content here...
+
+<aside class="notes">
+Here are some speaker notes. You can see them only in the speaker view window.
+</aside>
+```
+
+### 6. Initializing a Template
+Generate a starting presentation template demonstrating layouts, fragments, and styles:
+```bash
+show-off init
+```
+This generates `slides.md` and a sample image inside an `assets/` folder in your current directory.
