@@ -5,6 +5,10 @@ import mimetypes
 import os
 import re
 import sys
+import zlib
+import string
+import urllib.request
+import urllib.error
 from pathlib import Path
 
 # Base HTML Template for Reveal.js slideshows
@@ -70,6 +74,7 @@ HTML_TEMPLATE = """<!doctype html>
 
         Reveal.initialize(config);
     </script>
+    {mermaid_assets}
 </body>
 </html>
 """
@@ -81,6 +86,34 @@ EYE_CATCHY_CSS = """
 
 .reveal {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+}
+
+.reveal .slides section {
+    text-align: center !important;
+}
+
+.reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6 {
+    text-align: center !important;
+}
+
+.reveal p, .reveal li {
+    text-align: left !important;
+}
+
+.reveal ul, .reveal ol {
+    display: inline-block !important;
+    text-align: left !important;
+}
+
+/* Alignment Utilities */
+.reveal .text-center, .reveal .text-center * {
+    text-align: center !important;
+}
+.reveal .text-left, .reveal .text-left * {
+    text-align: left !important;
+}
+.reveal .text-right, .reveal .text-right * {
+    text-align: right !important;
 }
 
 /* Radial Glow Background */
@@ -252,6 +285,22 @@ EYE_CATCHY_CSS = """
 
 .reveal tr:hover {
     background: var(--table-tr-hover) !important;
+}
+
+/* Mermaid styling */
+.reveal .mermaid {
+    margin: 24px auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background: transparent !important;
+}
+.reveal .mermaid svg {
+    max-width: 100% !important;
+    max-height: 60vh !important;
+    height: auto !important;
+    width: auto !important;
+    background: transparent !important;
 }
 """
 
@@ -474,6 +523,66 @@ def run_init(directory):
     print("\nInitialization complete! To compile your presentation, run:\n  show-off make")
 
 
+def plantuml_encode(plantuml_text):
+    zlibbed_str = zlib.compress(plantuml_text.encode('utf-8'))
+    compressed_string = zlibbed_str[2:-4]
+    plantuml_alphabet = string.digits + string.ascii_uppercase + string.ascii_lowercase + '-_'
+    base64_alphabet = string.ascii_uppercase + string.ascii_lowercase + string.digits + '+/'
+    trans_table = bytes.maketrans(base64_alphabet.encode('utf-8'), plantuml_alphabet.encode('utf-8'))
+    return base64.b64encode(compressed_string).translate(trans_table).decode('utf-8')
+
+
+def process_plantuml(markdown_content):
+    pattern = re.compile(r'```plantuml\s*\n(.*?)\n```', re.DOTALL)
+    
+    def replace_block(match):
+        diagram_code = match.group(1).strip()
+        try:
+            encoded = plantuml_encode(diagram_code)
+            url = f"http://www.plantuml.com/plantuml/svg/{encoded}"
+            req = urllib.request.Request(
+                url,
+                headers={'User-Agent': 'show-off compiler'}
+            )
+            with urllib.request.urlopen(req, timeout=10) as response:
+                svg_data = response.read()
+            b64_data = base64.b64encode(svg_data).decode('utf-8')
+            return f'<div class="plantuml-container" style="text-align: center; margin: 24px auto;"><img class="plantuml-diagram" src="data:image/svg+xml;base64,{b64_data}" alt="PlantUML Diagram" style="border: none !important; box-shadow: none !important; max-width: 100% !important; max-height: 60vh !important; height: auto !important; width: auto !important; background: transparent !important;"></div>'
+        except Exception as e:
+            print(f"Warning: Failed to render PlantUML diagram: {e}. Keeping raw block.", file=sys.stderr)
+            return match.group(0)
+            
+    return pattern.sub(replace_block, markdown_content)
+
+
+def get_mermaid_js():
+    cache_dir = Path.home() / '.show-off'
+    cache_file = cache_dir / 'mermaid.min.js'
+    
+    if cache_file.exists():
+        try:
+            return cache_file.read_text(encoding='utf-8'), True
+        except Exception:
+            pass
+            
+    url = "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"
+    try:
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        req = urllib.request.Request(
+            url,
+            headers={'User-Agent': 'show-off compiler'}
+        )
+        print("Downloading Mermaid.js library for offline diagram rendering...", end=" ", flush=True)
+        with urllib.request.urlopen(req, timeout=15) as response:
+            js_data = response.read().decode('utf-8')
+        cache_file.write_text(js_data, encoding='utf-8')
+        print("SUCCESS")
+        return js_data, True
+    except Exception as e:
+        print(f"FAILED (offline fallback will use CDN): {e}", file=sys.stderr)
+        return "", False
+
+
 def run_make(input_path, output_path, theme_override=None):
     input_file = Path(input_path).resolve()
     output_file = Path(output_path).resolve()
@@ -503,6 +612,113 @@ def run_make(input_path, output_path, theme_override=None):
         metadata = {}
         markdown_content = content
         
+    # Process PlantUML blocks
+    markdown_content = process_plantuml(markdown_content)
+    
+    # Check for Mermaid diagrams and prepare script
+    has_mermaid = '```mermaid' in markdown_content
+    mermaid_assets = ""
+    if has_mermaid:
+        js_content, is_local = get_mermaid_js()
+        if is_local:
+            mermaid_assets = f"<script>{js_content}</script>\n"
+        else:
+            mermaid_assets = '<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>\n'
+            
+        mermaid_assets += """
+    <script>
+        if (typeof mermaid !== 'undefined') {
+            const getMermaidTheme = (element) => {
+                let theme = 'neutral';
+                const slide = element ? element.closest('section') : null;
+                const target = slide || document.querySelector('.reveal-viewport') || document.body;
+                if (target) {
+                    const rgb = window.getComputedStyle(target).backgroundColor;
+                    const m = rgb.match(/\\d+/g);
+                    let r = 255, g = 255, b = 255, a = 1;
+                    if (m) {
+                        r = parseInt(m[0], 10);
+                        g = parseInt(m[1], 10);
+                        b = parseInt(m[2], 10);
+                        a = m.length >= 4 ? parseFloat(m[3]) : 1;
+                    }
+                    if (r === 0 && g === 0 && b === 0 && a === 0) {
+                        const viewport = document.querySelector('.reveal-viewport') || document.body;
+                        const vrgb = window.getComputedStyle(viewport).backgroundColor;
+                        const vm = vrgb.match(/\\d+/g);
+                        if (vm && vm.length >= 3) {
+                            r = parseInt(vm[0], 10);
+                            g = parseInt(vm[1], 10);
+                            b = parseInt(vm[2], 10);
+                        }
+                    }
+                    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                    theme = (yiq < 128) ? 'dark' : 'neutral';
+                }
+                return theme;
+            };
+
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: getMermaidTheme(),
+                securityLevel: 'loose'
+            });
+
+            const renderMermaid = (slide) => {
+                if (!slide) return;
+                const codeBlocks = slide.querySelectorAll('pre code.mermaid, pre code.language-mermaid');
+                codeBlocks.forEach((code) => {
+                    const pre = code.parentElement;
+                    const div = document.createElement('div');
+                    div.className = 'mermaid';
+                    div.textContent = code.textContent;
+                    pre.parentNode.replaceChild(div, pre);
+                });
+
+                const unprocessed = slide.querySelectorAll('.mermaid:not([data-processed="true"])');
+                if (unprocessed.length > 0) {
+                    const nodesArray = Array.from(unprocessed);
+                    
+                    const currentTheme = getMermaidTheme(unprocessed[0]);
+                    mermaid.initialize({
+                        startOnLoad: false,
+                        theme: currentTheme,
+                        securityLevel: 'loose'
+                    });
+
+                    mermaid.run({ nodes: nodesArray }).then(() => {
+                        nodesArray.forEach(el => {
+                            el.setAttribute('data-processed', 'true');
+                            const svg = el.querySelector('svg');
+                            if (svg) {
+                                const origMaxWidth = svg.style.maxWidth;
+                                svg.style.setProperty('max-height', '60vh', 'important');
+                                svg.style.setProperty('height', 'auto', 'important');
+                                svg.style.setProperty('width', 'auto', 'important');
+                                if (origMaxWidth) {
+                                    svg.style.setProperty('max-width', `min(100%, ${origMaxWidth})`, 'important');
+                                } else {
+                                    svg.style.setProperty('max-width', '100%', 'important');
+                                }
+                            }
+                        });
+                        Reveal.layout();
+                    }).catch((err) => {
+                        console.error("Mermaid run failed:", err);
+                    });
+                }
+            };
+
+            window.renderMermaid = renderMermaid;
+            if (Reveal.isReady()) {
+                renderMermaid(Reveal.getCurrentSlide());
+            }
+            Reveal.on('ready', event => renderMermaid(event.currentSlide));
+            Reveal.on('slidechanged', event => renderMermaid(event.currentSlide));
+        }
+    </script>
+"""
+
     # Inline local images and videos referenced in Markdown, fix list items with .element, and escape closing textareas
     base_dir = input_file.parent
     markdown_content = inline_assets(markdown_content, base_dir)
@@ -698,7 +914,8 @@ def run_make(input_path, output_path, theme_override=None):
         notes_js=notes_js,
         markdown_js=markdown_js,
         highlight_js=highlight_js,
-        config_json=config_json
+        config_json=config_json,
+        mermaid_assets=mermaid_assets
     )
     
     # Save the output file
